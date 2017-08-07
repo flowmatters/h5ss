@@ -63,10 +63,8 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="TestData\SimpleTest.h5">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if not exist "$(TargetDir)bin32" md "$(TargetDir)bin32"
