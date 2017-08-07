@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using HDF.PInvoke;
 
-namespace FlowMatters.Source.HDF5IO.h5ss
+namespace FlowMatters.H5SS
 {
     public class HDF5Attributes
     {

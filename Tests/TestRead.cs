@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace FlowMatters.Source.HDF5IO.h5ss.Tests
+namespace FlowMatters.H5SS.Tests
 {
     [TestFixture]
     class TestRead

@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using FlowMatters.Source.HDF5IO.h5ss.Tests;
-using HDF.PInvoke;
+﻿using HDF.PInvoke;
 
-namespace FlowMatters.Source.HDF5IO.h5ss
+namespace FlowMatters.H5SS
 {
     public class HDF5Group : HDF5Container
     {

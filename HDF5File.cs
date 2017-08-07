@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using HDF.PInvoke;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Runtime.InteropServices;
 
-namespace FlowMatters.Source.HDF5IO.h5ss
+namespace FlowMatters.H5SS
 {
     public enum HDF5FileMode
     {

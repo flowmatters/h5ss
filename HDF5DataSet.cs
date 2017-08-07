@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using HDF.PInvoke;
 
-namespace FlowMatters.Source.HDF5IO.h5ss
+namespace FlowMatters.H5SS
 {
     public enum HDF5DataType
     {

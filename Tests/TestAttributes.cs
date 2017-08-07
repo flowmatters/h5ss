@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace FlowMatters.Source.HDF5IO.h5ss.Tests
+namespace FlowMatters.H5SS.Tests
 {
     [TestFixture]
     class TestAttributes : BaseHDF5WriteTest
