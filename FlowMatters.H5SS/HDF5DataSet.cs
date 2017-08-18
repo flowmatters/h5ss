@@ -304,6 +304,11 @@ namespace FlowMatters.H5SS
             this.parent = parent;
         }
 
+        ~HDF5DataSet()
+        {
+            parent = null;
+        }
+
         private string name;
 
         public override string Name
@@ -329,9 +334,12 @@ namespace FlowMatters.H5SS
 
                 iPtr = CreateNativeArray(data,dtype);
                 // copy to unmanaged array?
-
                 var success = H5D.write(h5Ref, dtype, H5S.ALL, dsRef, H5P.DEFAULT, iPtr);
-                Debug.Assert(success >= 0);
+                if (success < 0)
+                {
+                    throw new H5SSException("Couldn't write to dataset");
+                }
+
                 H5T.close(dtype);
 
             });

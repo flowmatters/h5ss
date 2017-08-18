@@ -49,6 +49,7 @@
     <Compile Include="TestAttributes.cs" />
     <Compile Include="TestRead.cs" />
     <Compile Include="TestWrite.cs" />
+    <Compile Include="TestWriteCompressed.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

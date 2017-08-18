@@ -9,6 +9,11 @@ namespace FlowMatters.H5SS
 {
     public class HDF5Container : HDF5Object
     {
+        ~HDF5Container()
+        {
+            parent = null;
+        }
+
         internal Int64 h5ID;
         protected string name;
 
@@ -76,12 +81,6 @@ namespace FlowMatters.H5SS
 
             H5G.close(rootID);
 
-            // Print out the information that we found
-            foreach (var line in datasetNames)
-            {
-                Debug.WriteLine(line);
-            }
-
             if (dataSets)
                 return datasetNames;
             return groupNames;
@@ -136,8 +135,10 @@ namespace FlowMatters.H5SS
             });
         }
 
-        public void CreateDataset(string name, Array data,bool[] unlimited=null)
+        public HDF5DataSet CreateDataset(string name, Array data,
+            bool[] unlimited=null,ulong[] chunkShape=null,bool compress=false)
         {
+            HDF5DataSet result = null;
             With((id) =>
             {
                 var nDims = data.Rank;
@@ -150,16 +151,36 @@ namespace FlowMatters.H5SS
                 var dataspaceID = H5S.create_simple(nDims, shape, maxShape);
                 var dataTypeID = HDF5DataSet.GetDataType(data);
 
-                var newID = H5D.create(id, name, dataTypeID, dataspaceID);
+                long creationPropertyList = 0L;
+                if (compress)
+                {
+                    if (chunkShape == null)
+                        chunkShape = shape;
 
+                    creationPropertyList =H5P.create(H5P.DATASET_CREATE);
+                    H5P.set_layout(creationPropertyList, H5D.layout_t.CHUNKED);
+                    H5P.set_deflate(creationPropertyList, 9);
+                    H5P.set_chunk(creationPropertyList, shape.Length, chunkShape);
+                }
+
+                var newID = H5D.create(id, name, dataTypeID, dataspaceID,0L,creationPropertyList,0L);
+                if (newID <= 0)
+                {
+                    throw new H5SSException("Couldn't create DataSet");
+                }
+
+                if (creationPropertyList>0)
+                    H5P.close(creationPropertyList);
                 H5T.close(dataTypeID);
                 H5S.close(dataspaceID);
-                Debug.Assert(newID > 0);
 
                 // write!
                 H5D.close(newID);
+                result = new HDF5DataSet(name,this);
+
             });
-            DataSets[name].Put(data);
+            result.Put(data);
+            return result;
         }
     }
 }

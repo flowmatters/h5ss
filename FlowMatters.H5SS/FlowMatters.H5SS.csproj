@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="H5SSException.cs" />
     <Compile Include="HDF5Attributes.cs" />
     <Compile Include="HDF5Container.cs" />
     <Compile Include="HDF5DataSet.cs" />
