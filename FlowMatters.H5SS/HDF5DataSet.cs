@@ -316,10 +316,41 @@ namespace FlowMatters.H5SS
             get { return name; }
         }
 
-        public void Put(Array data)
+        public static ulong[] Ones(int size) 
         {
+            var result = new ulong[size];
+            for (int i = 0; i < size; i++)
+            {
+                result[i] = 1;
+            }
+            return result;
+        }
+
+        public void Put(Array data,ulong[] location=null)
+        {
+            ulong[] shape = data.Shape();
+
             WithDataSpace((h5Ref, dsRef) =>
             {
+                long memDataSpace = H5S.ALL;
+
+                if (location != null)
+                {
+                    int selection = H5S.select_none(dsRef);
+                    if (selection < 0) throw new H5SSException("Couldn't clear dataspace selection");
+                    ulong[] stride = Ones(shape.Length);
+                    selection = H5S.select_hyperslab(dsRef,
+                        H5S.seloper_t.SET,
+                        location,
+                        stride,
+                        stride,
+                        shape
+                    );
+                    if (selection < 0) throw new H5SSException("Couldn't select hyperslab");
+
+                    memDataSpace = H5S.create_simple(shape.Length, shape, shape);
+                }
+
                 IntPtr iPtr;
                 var effectiveSize = data.Length*ElementSize;
                 //if (DataType == HDF5DataType.String)
@@ -334,7 +365,7 @@ namespace FlowMatters.H5SS
 
                 iPtr = CreateNativeArray(data,dtype);
                 // copy to unmanaged array?
-                var success = H5D.write(h5Ref, dtype, H5S.ALL, dsRef, H5P.DEFAULT, iPtr);
+                var success = H5D.write(h5Ref, dtype, memDataSpace, dsRef, H5P.DEFAULT, iPtr);
                 if (success < 0)
                 {
                     throw new H5SSException("Couldn't write to dataset");
@@ -342,13 +373,15 @@ namespace FlowMatters.H5SS
 
                 H5T.close(dtype);
 
+                if (location != null)
+                {
+                    H5S.close(memDataSpace);
+                }
             });
         }
 
-        public static long GetDataType(Array data)
+        public static long OpenHDFDataType(Type clrType, long maxSize=1)
         {
-            var clrType = data.ElementType();
-
             if (clrType == typeof(double))
                 return H5T.copy(H5T.NATIVE_DOUBLE);
 
@@ -363,9 +396,8 @@ namespace FlowMatters.H5SS
 
             if (clrType == typeof(string))
             {
-                var maxLength = (long) data.OfType<string>().Select(s => s.Length).Max();
                 var type = H5T.copy(H5T.C_S1);
-                var ptr = new IntPtr(maxLength + 1);//Leak?
+                var ptr = new IntPtr(maxSize);//Leak?
                 var status = H5T.set_size(type, ptr);
                 Debug.Assert(status>=0);
                 return type;

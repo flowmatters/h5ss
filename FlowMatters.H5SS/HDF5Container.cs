@@ -135,21 +135,20 @@ namespace FlowMatters.H5SS
             });
         }
 
-        public HDF5DataSet CreateDataset(string name, Array data,
-            bool[] unlimited=null,ulong[] chunkShape=null,bool compress=false)
+        public HDF5DataSet CreateDataset(string name, ulong[] shape, Type dType, long maxSize=1,
+            bool[] unlimited = null, ulong[] chunkShape = null, bool compress = false)
         {
             HDF5DataSet result = null;
             With((id) =>
             {
-                var nDims = data.Rank;
+                int nDims = shape.Length;
                 if (unlimited == null)
                     unlimited = Enumerable.Range(0, nDims).Select(d => false).ToArray();
 
-                ulong[] shape = data.Shape();
                 ulong[] maxShape =
                     Enumerable.Range(0, nDims).Select(d => unlimited[d] ? H5S.UNLIMITED : shape[d]).ToArray();
                 var dataspaceID = H5S.create_simple(nDims, shape, maxShape);
-                var dataTypeID = HDF5DataSet.GetDataType(data);
+                long dataTypeID = HDF5DataSet.OpenHDFDataType(dType,maxSize);
 
                 long creationPropertyList = 0L;
                 if (compress)
@@ -157,28 +156,43 @@ namespace FlowMatters.H5SS
                     if (chunkShape == null)
                         chunkShape = shape;
 
-                    creationPropertyList =H5P.create(H5P.DATASET_CREATE);
+                    creationPropertyList = H5P.create(H5P.DATASET_CREATE);
                     H5P.set_layout(creationPropertyList, H5D.layout_t.CHUNKED);
                     H5P.set_deflate(creationPropertyList, 9);
                     H5P.set_chunk(creationPropertyList, shape.Length, chunkShape);
                 }
 
-                var newID = H5D.create(id, name, dataTypeID, dataspaceID,0L,creationPropertyList,0L);
+                var newID = H5D.create(id, name, dataTypeID, dataspaceID, 0L, creationPropertyList, 0L);
                 if (newID <= 0)
                 {
                     throw new H5SSException("Couldn't create DataSet");
                 }
 
-                if (creationPropertyList>0)
+                if (creationPropertyList > 0)
                     H5P.close(creationPropertyList);
                 H5T.close(dataTypeID);
                 H5S.close(dataspaceID);
 
                 // write!
                 H5D.close(newID);
-                result = new HDF5DataSet(name,this);
+                result = new HDF5DataSet(name, this);
 
             });
+            return result;
+        }
+
+        public HDF5DataSet CreateDataset(string name, Array data,
+            bool[] unlimited=null,ulong[] chunkShape=null,bool compress=false)
+        {
+            var nDims = data.Rank;
+            ulong[] shape = data.Shape();
+
+            Type dType = data.ElementType();
+            long maxLength = 1;
+            if(dType==typeof(string))
+                maxLength = 1+ (long)data.OfType<string>().Select(s => s.Length).Max();
+
+            var result = CreateDataset(name, shape, dType, maxLength, unlimited, chunkShape, compress);
             result.Put(data);
             return result;
         }
