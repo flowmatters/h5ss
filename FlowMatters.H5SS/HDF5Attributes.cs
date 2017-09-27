@@ -48,6 +48,7 @@ namespace FlowMatters.H5SS
                         var dest = new byte[actualSizeI];
 
                         Marshal.Copy(name, dest, 0, actualSizeI);
+                        Marshal.FreeHGlobal(name);
                         keys.Add(Encoding.ASCII.GetString(dest).TrimEnd((Char)0));
                     }
                 });
@@ -97,6 +98,7 @@ namespace FlowMatters.H5SS
 
                     attributeId = H5A.create(id, key, typeId, dataspace);
                     H5A.write(attributeId, typeId, nativeMemory);
+                    Marshal.FreeHGlobal(nativeMemory);
                 }
                 finally
                 {
@@ -163,12 +165,14 @@ namespace FlowMatters.H5SS
                         {
                             var dest = new long[1];
                             Marshal.Copy(iPtr,dest,0,1);
+                            Marshal.FreeHGlobal(iPtr);
                             return dest[0];
                         }
                         else // Must be a string...
                         {
                             var dest = new byte[size];
                             Marshal.Copy(iPtr, dest, 0, size);
+                            Marshal.FreeHGlobal(iPtr);
                             return Encoding.ASCII.GetString(dest).TrimEnd((Char)0);
                         }
 

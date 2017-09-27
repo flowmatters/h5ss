@@ -128,7 +128,7 @@ namespace FlowMatters.H5SS
 
         public void CreateGroup(string name)
         {
-            With((id) =>
+            With(id =>
             {
                 var newID = H5G.create(id, name);
                 H5G.close(newID);
@@ -163,15 +163,16 @@ namespace FlowMatters.H5SS
                 }
 
                 var newID = H5D.create(id, name, dataTypeID, dataspaceID, 0L, creationPropertyList, 0L);
-                if (newID <= 0)
-                {
-                    throw new H5SSException("Couldn't create DataSet");
-                }
 
                 if (creationPropertyList > 0)
                     H5P.close(creationPropertyList);
                 H5T.close(dataTypeID);
                 H5S.close(dataspaceID);
+
+                if (newID <= 0)
+                {
+                    throw new H5SSException("Couldn't create DataSet");
+                }
 
                 // write!
                 H5D.close(newID);

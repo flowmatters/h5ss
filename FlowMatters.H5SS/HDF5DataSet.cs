@@ -112,6 +112,8 @@ namespace FlowMatters.H5SS
             With(datasetID =>
             {
                 long dataspaceID = H5D.get_space(datasetID);
+                if(dataspaceID<0)
+                    throw new H5SSException("Couldn't open data space for dataset");
 
                 try
                 {
@@ -130,30 +132,37 @@ namespace FlowMatters.H5SS
             WithDataSpace((h5Ref, dsRef) =>
             {
                 var success = H5S.select_none(dsRef);
-                Debug.Assert(success >= 0);
+                if (success < 0) throw new H5SSException("Error with dataspace: select_none");
                 success = H5S.select_all(dsRef);
-                Debug.Assert(success >= 0);
+                if (success < 0) throw new H5SSException("Error with dataspace: select_all");
                 int selectElemNpoints = (int)H5S.get_select_npoints(dsRef);
                 var effectiveSize = ElementSize * selectElemNpoints;
                 if (DataType == HDF5DataType.String)
                 {
                     effectiveSize *= _stringLength;
                 }
-                IntPtr iPtr = Marshal.AllocHGlobal(effectiveSize);
+                IntPtr iPtr = Marshal.AllocHGlobal(effectiveSize); // TODO Deallocate
 
-                var dtype = H5D.get_type(h5Ref); // Return?
-                success = H5D.read(h5Ref, dtype, H5S.ALL, dsRef, H5P.DEFAULT, iPtr);
-                Debug.Assert(success >= 0);
-                H5T.close(dtype);
+                try
+                {
+                    var dtype = H5D.get_type(h5Ref); // Return?
+                    success = H5D.read(h5Ref, dtype, H5S.ALL, dsRef, H5P.DEFAULT, iPtr);
+                    H5T.close(dtype);
 
-                var tmp = CreateClrArray(iPtr, selectElemNpoints);
+                    if (success < 0) throw new H5SSException("Error reading dataset");
 
-                var shape = Shape.Select(ul => (long)ul).ToArray();
-                if (ClrType == typeof(byte))
-                    shape = shape.Concat(new[] { (long)_stringLength }).ToArray();
+                    var tmp = CreateClrArray(iPtr, selectElemNpoints);
+                    var shape = Shape.Select(ul => (long)ul).ToArray();
+                    if (ClrType == typeof(byte))
+                        shape = shape.Concat(new[] { (long)_stringLength }).ToArray();
 
-                result = Array.CreateInstance(ClrType, shape);
-                Buffer.BlockCopy(tmp, 0, result, 0, effectiveSize);
+                    result = Array.CreateInstance(ClrType, shape);
+                    Buffer.BlockCopy(tmp, 0, result, 0, effectiveSize);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(iPtr);
+                }
 
                 // Convert bytes to characters...
                 if (DataType == HDF5DataType.String)
@@ -169,8 +178,6 @@ namespace FlowMatters.H5SS
                 H5S.get_simple_extent_dims(dsRef, _shape, _maxDims); // WTF?
             });
             return result;
-
-
         }
 
         private Array CreateClrArray(IntPtr native,int selectElemNpoints)
@@ -366,16 +373,29 @@ namespace FlowMatters.H5SS
                 iPtr = CreateNativeArray(data,dtype);
                 // copy to unmanaged array?
                 var success = H5D.write(h5Ref, dtype, memDataSpace, dsRef, H5P.DEFAULT, iPtr);
-                if (success < 0)
-                {
-                    throw new H5SSException("Couldn't write to dataset");
-                }
-
                 H5T.close(dtype);
 
                 if (location != null)
                 {
                     H5S.close(memDataSpace);
+                }
+
+                Marshal.FreeHGlobal(iPtr);
+                if (success < 0)
+                {
+                    throw new H5SSException("Couldn't write to dataset");
+                }
+            });
+        }
+
+        public void Flush()
+        {
+            With(dsId =>
+            {
+                var result = H5D.flush(dsId);
+                if (result < 0)
+                {
+                    throw new H5SSException("Cannot flush dataset");
                 }
             });
         }
