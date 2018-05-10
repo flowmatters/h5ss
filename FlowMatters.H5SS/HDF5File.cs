@@ -5,9 +5,9 @@ namespace FlowMatters.H5SS
 {
     public enum HDF5FileMode
     {
-        ReadWrite = (int) HDF.PInvoke.H5F.ACC_RDWR,
-        ReadOnly = (int) HDF.PInvoke.H5F.ACC_RDONLY,
-        WriteNew = (int) HDF.PInvoke.H5F.ACC_TRUNC
+        ReadWrite = (int) H5F.ACC_RDWR,
+        ReadOnly = (int) H5F.ACC_RDONLY,
+        WriteNew = (int) H5F.ACC_TRUNC
     }
 
     public class HDF5File : HDF5Container
@@ -23,10 +23,10 @@ namespace FlowMatters.H5SS
             }
             else if ((mode == HDF5FileMode.ReadOnly) || File.Exists(fn))
             {
-                h5ID = HDF.PInvoke.H5F.open(fn, (uint) mode);
+                h5ID = H5F.open(fn, (uint) mode);
                 ExpectValidFile(fn);
                 _bhInfo = new H5F.info_t();
-                HDF.PInvoke.H5F.get_info(h5ID, ref _bhInfo);
+                H5F.get_info(h5ID, ref _bhInfo);
             }
             else
             {
