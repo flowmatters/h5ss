@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
@@ -135,6 +136,32 @@ namespace FlowMatters.H5SS.Tests
 
                 }
                 );
+        }
+
+        [Test]
+        public void TestExceptionOnCreateExisting()
+        {
+            var fn = $"{TestContext.CurrentContext.TestDirectory}\\TestCreateTwice.h5";
+            if (File.Exists(fn))
+            {
+                File.Delete(fn);
+            }
+
+            HDF5File f1 = null, f2 = null;
+            var threw = false;
+            f1 = new HDF5File(fn, HDF5FileMode.WriteNew);
+            try
+            {
+               f2 = new HDF5File(fn,HDF5FileMode.WriteNew);
+            }
+            catch (IOException)
+            {
+                threw = true;
+            }
+
+            f1.Close();
+            Assert.IsTrue(threw,"Expected an IOException when we tried to create the file the second time round.");
+            Assert.IsNull(f2);
         }
     }
 }
