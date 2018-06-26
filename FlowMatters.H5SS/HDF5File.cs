@@ -17,6 +17,7 @@ namespace FlowMatters.H5SS
 
         public HDF5File(string fn, HDF5FileMode mode = HDF5FileMode.ReadOnly)
         {
+            Filename = fn;
             if (mode == HDF5FileMode.WriteNew)
             {
                 Create(fn);
@@ -35,6 +36,8 @@ namespace FlowMatters.H5SS
             name = "/";
         }
 
+        public string Filename { get; set; }
+
         private void Create(string fn)
         {
             h5ID = H5F.create(fn, H5F.ACC_TRUNC);
@@ -49,7 +52,11 @@ namespace FlowMatters.H5SS
 
         public void Close()
         {
-            H5F.close(h5ID);
+            var result = H5F.close(h5ID);
+            if (result < 0)
+            {
+                throw new IOException($"Error closing HDF5 File: {Filename}, error code {result}");
+            }
             closed = true;
         }
 
