@@ -323,6 +323,11 @@ namespace FlowMatters.H5SS
             get { return name; }
         }
 
+        public string Path
+        {
+            get { return parent.Path + '/' + Name; }
+        }
+
         public static ulong[] Ones(int size) 
         {
             var result = new ulong[size];
@@ -383,7 +388,7 @@ namespace FlowMatters.H5SS
                 Marshal.FreeHGlobal(iPtr);
                 if (success < 0)
                 {
-                    throw new H5SSException("Couldn't write to dataset");
+                    throw new H5SSException(string.Format("Couldn't write to dataset: {0}",this.Path));
                 }
             });
         }

@@ -111,6 +111,18 @@ namespace FlowMatters.H5SS
             }
         }
 
+        public string Path
+        {
+            get
+            {
+                if (parent == null)
+                {
+                    return Name;
+                }
+                return parent.Path + '/' + Name;
+            }
+        }
+
         public override string Name { get { return name; } }
 
         public override void With(Action<long> action)
