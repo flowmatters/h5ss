@@ -62,7 +62,7 @@ namespace FlowMatters.H5SS
 
         ~HDF5File()
         {
-            if (!closed)
+            if (!closed && (h5ID>0))
                 H5F.close(h5ID);
         }
     }
